@@ -4,17 +4,21 @@ on: [push, pull_request]
 
 jobs:
   phpunit:
-    name: PHP ${{ matrix.php }} on ${{ matrix.os }}
+    name: PHP ${{ matrix.php }} / Laravel ${{ matrix.laravel }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
         php: ['8.2', '8.3', '8.4']
+        laravel: ['12.*', '13.*']
+        exclude:
+          - php: '8.2'
+            laravel: '13.*'
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install PHP
         uses: shivammathur/setup-php@v2
@@ -23,6 +27,14 @@ jobs:
           extensions: mbstring
           tools: composer:v2
           coverage: none
+
+      - name: Select Laravel version
+        run: |
+          composer require --no-update --no-interaction \
+            illuminate/http:${{ matrix.laravel }} \
+            illuminate/console:${{ matrix.laravel }} \
+            illuminate/support:${{ matrix.laravel }} \
+            illuminate/filesystem:${{ matrix.laravel }}
 
       - name: Install dependencies
         run: |
